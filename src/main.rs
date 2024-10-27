@@ -3,14 +3,19 @@ use clap::Parser;
 use cli::Cli;
 use dialoguer::{theme::ColorfulTheme, Password};
 use download::download_submissions;
+use env_logger::Env;
+use feedback::upload_feedback;
 use ilias::{client::IliasClient, exercise::Exercise, reference::Reference, IliasElement, ILIAS_URL};
 use keyring::Entry;
 use reqwest::Url;
 
 mod cli;
 mod download;
+mod feedback;
 
 fn main() -> Result<()> {
+    let env = Env::default().filter_or("RUST_LOG", "info");
+    env_logger::init_from_env(env);
     let cli_args = Cli::parse();
 
     let username = cli_args.username;
@@ -58,13 +63,13 @@ fn main() -> Result<()> {
         Reference::Unavailable => return Err(anyhow!("Could not get grade page")),
         Reference::Resolved(page) => page,
         Reference::Unresolved(_) => {
-            &grade_page.resolve(&ilias_client).expect("Something went wrong resolving the grade page")
+            &grade_page.resolve(&ilias_client).context("Something went wrong resolving the grade page")?
         }
     };
 
     match cli_args.command {
         cli::Commands::Download { to, extract, flatten } => download_submissions(grade_page, &to, extract, flatten, &ilias_client),
-        cli::Commands::Feedback { no_confim } => Ok(())
+        cli::Commands::Feedback { no_confim, feedback_dir, suffix } => upload_feedback(grade_page, no_confim, &feedback_dir, &suffix, &ilias_client),
     }?;
 
     Ok(())

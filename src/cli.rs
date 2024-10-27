@@ -41,6 +41,14 @@ pub enum Commands {
     },
     /// Upload feedback
     Feedback {
+        /// The directory where your feedback files are located
+        #[arg(required = true)]
+        feedback_dir: PathBuf,
+
+        /// A suffix to append to uploaded feedback files
+        #[arg(long, short, default_value = "")]
+        suffix: String,
+
         /// Upload without confirmation
         #[arg(long, default_value = "false")]
         no_confim: bool,

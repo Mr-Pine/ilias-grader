@@ -7,8 +7,11 @@ edition = "2021"
 anyhow = "1.0.91"
 clap = { version = "4.5.20", features = ["derive"] }
 dialoguer = "0.11.0"
-ilias = { path = "../ilias-rs" }
-keyring = { version = "3.6.0", features = ["apple-native", "linux-native", "windows-native"] }
+env_logger = "0.11.5"
+ilias = { git = "https://github.com/Mr-Pine/ilias-rs.git" }
+keyring = { version = "3.6.0", features = ["apple-native", "linux-native-sync-persistent", "windows-native"] }
+log = "0.4.22"
+regex = "1.11.1"
 reqwest = "0.12.8"
 tempfile = "3.13.0"
 zip = "2.2.0"

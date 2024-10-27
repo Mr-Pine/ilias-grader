@@ -1,7 +1,13 @@
-use std::{fs::{self, File}, io, path::{Path, PathBuf}, str::FromStr};
+use std::{
+    fs::{self, File},
+    io,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
 use anyhow::Result;
 use ilias::{client::IliasClient, exercise::grades::GradePage};
+use log::info;
 use tempfile::NamedTempFile;
 use zip::ZipArchive;
 
@@ -12,6 +18,7 @@ pub fn download_submissions(
     flatten: bool,
     ilias_client: &IliasClient,
 ) -> Result<()> {
+    info!("Downloading all submissions for {}", grade_page.name);
     if extract {
         let tempfile = NamedTempFile::new()?;
         let temppath = tempfile.into_temp_path();
@@ -27,6 +34,7 @@ pub fn download_submissions(
             }
 
             let mut zip_path = file.enclosed_name().expect("Malformed path in zip file");
+            let original_zip_path = zip_path.clone();
             zip_path = drop_components(&mut zip_path, 2)?.to_path_buf();
 
             if flatten {
@@ -35,7 +43,17 @@ pub fn download_submissions(
 
             let file_path = to.join(zip_path);
 
-            let dir = file_path.parent().expect("Could not get containing directory");
+            info!(
+                "Extracting '{}' to '{}'",
+                original_zip_path
+                    .to_str()
+                    .expect("Could not display zip path"),
+                file_path.to_str().expect("Could not display target path")
+            );
+
+            let dir = file_path
+                .parent()
+                .expect("Could not get containing directory");
             fs::create_dir_all(dir)?;
 
             let mut target_file = File::create(file_path)?;
@@ -43,7 +61,10 @@ pub fn download_submissions(
         }
     } else {
         grade_page.download_all_submissions_zip(ilias_client, to)?;
-        println!("Downloaded zip file to {}", to.to_str().unwrap_or("<unknown>"));
+        info!(
+            "Downloaded zip file to {}",
+            to.to_str().unwrap_or("<unknown>")
+        );
     }
 
     Ok(())
@@ -55,7 +76,16 @@ fn drop_components(path: &mut PathBuf, count: usize) -> Result<&Path> {
 }
 
 fn flatten_path(path: &Path) -> Result<PathBuf> {
-    let components = path.components().map(|component| component.as_os_str().to_str().expect("Weird filename").replace(" ", "_")).collect::<Vec<_>>();
+    let components = path
+        .components()
+        .map(|component| {
+            component
+                .as_os_str()
+                .to_str()
+                .expect("Weird filename")
+                .replace(" ", "_")
+        })
+        .collect::<Vec<_>>();
     let path = components.join("-");
 
     Ok(PathBuf::from_str(&path)?)
