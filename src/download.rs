@@ -70,7 +70,7 @@ pub fn download_submissions(
     Ok(())
 }
 
-fn drop_components(path: &mut PathBuf, count: usize) -> Result<&Path> {
+fn drop_components(path: &mut Path, count: usize) -> Result<&Path> {
     let prefix = path.components().take(count).collect::<PathBuf>();
     Ok(path.strip_prefix(prefix)?)
 }

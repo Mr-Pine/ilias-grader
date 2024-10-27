@@ -5,7 +5,9 @@ use dialoguer::{theme::ColorfulTheme, Password};
 use download::download_submissions;
 use env_logger::Env;
 use feedback::upload_feedback;
-use ilias::{client::IliasClient, exercise::Exercise, reference::Reference, IliasElement, ILIAS_URL};
+use ilias::{
+    client::IliasClient, exercise::Exercise, reference::Reference, IliasElement, ILIAS_URL,
+};
 use keyring::Entry;
 use reqwest::Url;
 
@@ -42,7 +44,7 @@ fn main() -> Result<()> {
         }
     };
 
-    let ilias_client = IliasClient::new(Url::parse(&ILIAS_URL)?)?;
+    let ilias_client = IliasClient::new(Url::parse(ILIAS_URL)?)?;
     ilias_client.authenticate(&username, &password)?;
 
     let mut exercise = Exercise::parse(
@@ -55,21 +57,31 @@ fn main() -> Result<()> {
         &ilias_client,
     )?;
 
-    let grades = exercise.get_grades(&ilias_client).context("No grading options for this exercise")?;
+    let grades = exercise
+        .get_grades(&ilias_client)
+        .context("No grading options for this exercise")?;
     let assignment_grades = &grades.assignment_grades;
     let grade_page = &assignment_grades[cli_args.assignment];
 
     let grade_page = match grade_page {
         Reference::Unavailable => return Err(anyhow!("Could not get grade page")),
         Reference::Resolved(page) => page,
-        Reference::Unresolved(_) => {
-            &grade_page.resolve(&ilias_client).context("Something went wrong resolving the grade page")?
-        }
+        Reference::Unresolved(_) => &grade_page
+            .resolve(&ilias_client)
+            .context("Something went wrong resolving the grade page")?,
     };
 
     match cli_args.command {
-        cli::Commands::Download { to, extract, flatten } => download_submissions(grade_page, &to, extract, flatten, &ilias_client),
-        cli::Commands::Feedback { no_confim, feedback_dir, suffix } => upload_feedback(grade_page, no_confim, &feedback_dir, &suffix, &ilias_client),
+        cli::Commands::Download {
+            to,
+            extract,
+            flatten,
+        } => download_submissions(grade_page, &to, extract, flatten, &ilias_client),
+        cli::Commands::Feedback {
+            no_confim,
+            feedback_dir,
+            suffix,
+        } => upload_feedback(grade_page, no_confim, &feedback_dir, &suffix, &ilias_client),
     }?;
 
     Ok(())

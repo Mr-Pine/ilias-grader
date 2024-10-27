@@ -1,5 +1,5 @@
 use std::{
-    ffi::{OsStr, OsString},
+    ffi::OsString,
     fs::read_dir,
     path::{Path, PathBuf},
     str::FromStr,
