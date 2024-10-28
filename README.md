@@ -5,7 +5,7 @@
 A tool to download assignment submissions and upload feedback files for them
 
 ## Installation
-Clone this repository and either install it with `cargo install` or simply run it with `cargo run -- [args]`
+Clone this repository and either install it with `cargo install --path .` or simply run it with `cargo run -- [args]`
 
 ## Usage
 
