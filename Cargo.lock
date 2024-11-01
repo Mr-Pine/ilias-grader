@@ -1154,7 +1154,6 @@ dependencies = [
  "ilias",
  "keyring",
  "log",
- "once_cell",
  "regex",
  "reqwest",
  "tempfile",

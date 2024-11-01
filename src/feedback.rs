@@ -3,16 +3,16 @@ use std::{
     fs::read_dir,
     path::{Path, PathBuf},
     str::FromStr,
+    sync::LazyLock,
 };
 
 use anyhow::{anyhow, Context, Result};
 use dialoguer::{theme::ColorfulTheme, Confirm};
 use ilias::{client::IliasClient, exercise::grades::GradePage, local_file::NamedLocalFile};
 use log::{debug, info};
-use once_cell::sync::Lazy;
 use regex::Regex;
 
-static FLATTENED_FILENAME_REGEX: Lazy<Regex> = Lazy::new(|| {
+static FLATTENED_FILENAME_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new("@student\\.kit\\.edu_\\d+-(?<filename>.*)").expect("Invalid regex pattern")
 });
 
