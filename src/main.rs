@@ -80,8 +80,16 @@ fn main() -> Result<()> {
         cli::Commands::Feedback {
             no_confim,
             feedback_dir,
+            filter_expr,
             suffix,
-        } => upload_feedback(grade_page, no_confim, &feedback_dir, &suffix, &ilias_client),
+        } => upload_feedback(
+            grade_page,
+            no_confim,
+            &feedback_dir,
+            filter_expr.as_ref(),
+            suffix.as_ref(),
+            &ilias_client,
+        ),
     }?;
 
     Ok(())
