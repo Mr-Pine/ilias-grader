@@ -28,10 +28,9 @@ pub fn upload_feedback(
         || Confirm::with_theme(&ColorfulTheme::default())
             .with_prompt(format!(
                 "Upload feedback{} from {} to {}?",
-                filter_expr.map_or(String::new(), |filter_expr| format!(
-                    " matching {}",
-                    filter_expr.as_str()
-                )),
+                filter_expr
+                    .map(|filter_expr| format!(" matching {}", filter_expr.as_str()))
+                    .unwrap_or_default(),
                 feedback_dir_path
                     .to_str()
                     .expect("Could not display feedback_dir"),
