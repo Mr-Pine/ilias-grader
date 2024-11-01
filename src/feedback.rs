@@ -9,7 +9,12 @@ use anyhow::{anyhow, Context, Result};
 use dialoguer::{theme::ColorfulTheme, Confirm};
 use ilias::{client::IliasClient, exercise::grades::GradePage, local_file::NamedLocalFile};
 use log::{debug, info};
+use once_cell::sync::Lazy;
 use regex::Regex;
+
+static FLATTENED_FILENAME_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new("@student\\.kit\\.edu_\\d+-(?<filename>.*)").expect("Invalid regex pattern")
+});
 
 pub fn upload_feedback(
     grade_page: &GradePage,
@@ -42,8 +47,6 @@ pub fn upload_feedback(
     let feedback_dir = read_dir(feedback_dir_path)?;
     let feedback_entries = feedback_dir.collect::<std::result::Result<Vec<_>, _>>()?;
 
-    let flattened_filename_regex = Regex::new("@student\\.kit\\.edu_\\d+-(?<filename>.*)")?;
-
     for submission in &grade_page.submissions {
         for feedback_entry in &feedback_entries {
             let path = feedback_entry.path();
@@ -55,7 +58,7 @@ pub fn upload_feedback(
                 .to_str()
                 .map_or(false, |str| str.starts_with(&submission.identifier))
                 || relative_path_string.to_str().map_or(false, |str| {
-                    str.starts_with(&submission.identifier.replace(" ", "_"))
+                    str.starts_with(&submission.identifier.replace(' ', "_"))
                 })
             {
                 if feedback_entry.file_type()?.is_dir() {
@@ -105,7 +108,7 @@ pub fn upload_feedback(
                     }
                 } else {
                     let target_filename = feedback_entry.file_name();
-                    let target_filename = flattened_filename_regex
+                    let target_filename = FLATTENED_FILENAME_REGEX
                         .captures(
                             target_filename
                                 .to_str()
@@ -141,7 +144,7 @@ pub fn upload_feedback(
                     "Unhandled file {:?}: Did not start with {:?} or {:?}",
                     relative_path,
                     submission.identifier,
-                    submission.identifier.replace(" ", "_")
+                    submission.identifier.replace(' ', "_")
                 );
             }
         }

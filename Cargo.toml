@@ -11,6 +11,7 @@ env_logger = "0.11.5"
 ilias = { git = "https://github.com/Mr-Pine/ilias-rs.git" }
 keyring = { version = "3.6.0", features = ["apple-native", "linux-native-sync-persistent", "windows-native"] }
 log = "0.4.22"
+once_cell = "1.20.2"
 regex = "1.11.1"
 reqwest = "0.12.8"
 tempfile = "3.13.0"
