@@ -8,7 +8,11 @@ use std::{
 
 use anyhow::{anyhow, Context, Result};
 use dialoguer::{theme::ColorfulTheme, Confirm};
-use ilias::{client::IliasClient, exercise::grades::GradePage, local_file::NamedLocalFile};
+use ilias::{
+    client::IliasClient,
+    exercise::grades::{submission::GradeSubmission, GradePage},
+    local_file::NamedLocalFile,
+};
 use log::{debug, info};
 use regex::Regex;
 
@@ -82,27 +86,14 @@ pub fn upload_feedback(
                                 .to_str()
                                 .context("Could not convert filename to &str")?;
 
-                            if !filter_expr
-                                .map_or(true, |filter_expr| filter_expr.is_match(target_filename))
-                            {
-                                info!("Skipped uploading {}", target_filename);
-                                continue;
-                            }
-
-                            let target_filename = match suffix {
-                                Some(ref suffix) => {
-                                    append_suffix(target_filename, suffix.as_ref())?
-                                }
-                                None => target_filename.to_owned(),
-                            };
-
-                            info!("Uploading {} to {}", target_filename, submission.identifier);
-                            let local_file = NamedLocalFile {
-                                name: target_filename,
-                                path: user_file.path(),
-                            };
-
-                            submission.upload(local_file, ilias_client)?;
+                            upload_filtered_file_with_suffix(
+                                user_file.path(),
+                                target_filename,
+                                filter_expr,
+                                suffix.as_ref(),
+                                submission,
+                                ilias_client,
+                            )?;
                         }
                     }
                 } else {
@@ -118,25 +109,14 @@ pub fn upload_feedback(
                         .context("No filename captured")?
                         .as_str();
 
-                    if !filter_expr
-                        .map_or(true, |filter_expr| filter_expr.is_match(target_filename))
-                    {
-                        info!("Skipped uploading {}", target_filename);
-                        continue;
-                    }
-
-                    let target_filename = match suffix {
-                        Some(ref suffix) => append_suffix(target_filename, suffix.as_ref())?,
-                        None => target_filename.to_owned(),
-                    };
-
-                    info!("Uploading {} to {}", target_filename, submission.identifier);
-                    let local_file = NamedLocalFile {
-                        name: target_filename,
-                        path: feedback_entry.path(),
-                    };
-
-                    submission.upload(local_file, ilias_client)?;
+                    upload_filtered_file_with_suffix(
+                        feedback_entry.path(),
+                        target_filename,
+                        filter_expr,
+                        suffix.as_ref(),
+                        submission,
+                        ilias_client,
+                    )?;
                 }
             } else {
                 debug!(
@@ -148,6 +128,35 @@ pub fn upload_feedback(
             }
         }
     }
+
+    Ok(())
+}
+
+fn upload_filtered_file_with_suffix(
+    path: PathBuf,
+    filename: &str,
+    filter_expr: Option<&Regex>,
+    suffix: Option<impl AsRef<str>>,
+    submission: &GradeSubmission,
+    ilias_client: &IliasClient,
+) -> Result<()> {
+    if !filter_expr.map_or(true, |filter_expr| filter_expr.is_match(filename)) {
+        debug!("Skipped uploading {}", filename);
+        return Ok(());
+    }
+
+    let target_filename = match suffix {
+        Some(ref suffix) => append_suffix(filename, suffix.as_ref())?,
+        None => filename.to_owned(),
+    };
+
+    info!("Uploading {} to {}", target_filename, submission.identifier);
+    let local_file = NamedLocalFile {
+        name: target_filename,
+        path,
+    };
+
+    submission.upload(local_file, ilias_client)?;
 
     Ok(())
 }
