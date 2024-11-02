@@ -21,28 +21,22 @@ fn main() -> Result<()> {
     let cli_args = Cli::parse();
 
     let username = cli_args.username;
-    let password = match cli_args.password {
-        Some(pw) => pw,
-        None => {
-            let keyring_entry = Entry::new("ilias_grader", &username).unwrap();
+    let password = cli_args.password.unwrap_or_else(|| {
+        let keyring_entry = Entry::new("ilias_grader", &username).unwrap();
 
-            let stored_password = keyring_entry.get_password();
+        let stored_password = keyring_entry.get_password();
 
-            match stored_password {
-                Ok(pw) => pw,
-                Err(_) => {
-                    let pw = Password::with_theme(&ColorfulTheme::default())
-                        .with_prompt(format!("Ilias password for user: {}", &username))
-                        .interact()
-                        .unwrap();
+        stored_password.unwrap_or_else(|_| {
+            let pw = Password::with_theme(&ColorfulTheme::default())
+                .with_prompt(format!("Ilias password for user: {}", &username))
+                .interact()
+                .unwrap();
 
-                    keyring_entry.set_password(&pw).unwrap();
+            keyring_entry.set_password(&pw).unwrap();
 
-                    pw
-                }
-            }
-        }
-    };
+            pw
+        })
+    });
 
     let ilias_client = IliasClient::new(Url::parse(ILIAS_URL)?)?;
     ilias_client.authenticate(&username, &password)?;
@@ -80,8 +74,16 @@ fn main() -> Result<()> {
         cli::Commands::Feedback {
             no_confim,
             feedback_dir,
+            filter_expr,
             suffix,
-        } => upload_feedback(grade_page, no_confim, &feedback_dir, &suffix, &ilias_client),
+        } => upload_feedback(
+            grade_page,
+            no_confim,
+            &feedback_dir,
+            filter_expr.as_ref(),
+            suffix.as_ref(),
+            &ilias_client,
+        ),
     }?;
 
     Ok(())

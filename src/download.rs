@@ -83,7 +83,7 @@ fn flatten_path(path: &Path) -> Result<PathBuf> {
                 .as_os_str()
                 .to_str()
                 .expect("Weird filename")
-                .replace(" ", "_")
+                .replace(' ', "_")
         })
         .collect::<Vec<_>>();
     let path = components.join("-");

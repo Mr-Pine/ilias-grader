@@ -1,19 +1,20 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
+use regex::Regex;
 
 #[derive(Debug, Parser)]
 #[command(arg_required_else_help = true)]
 pub struct Cli {
     /// The id of the exercise you want to handle
-    #[arg(long, short, required = true)]
+    #[arg(long, short)]
     pub id: u32,
 
     /// The index of the assignment you want to handle
-    #[arg(long, short, required = true)]
+    #[arg(long, short)]
     pub assignment: usize,
 
-    #[arg(short, long, required = true)]
+    #[arg(short, long)]
     pub username: String,
 
     #[arg(short, long)]
@@ -28,7 +29,6 @@ pub enum Commands {
     /// Download submissions
     Download {
         /// The path to download the assignments to
-        #[arg(required = true)]
         to: PathBuf,
 
         /// Whether to extract the zip file
@@ -42,15 +42,18 @@ pub enum Commands {
     /// Upload feedback
     Feedback {
         /// The directory where your feedback files are located
-        #[arg(required = true)]
         feedback_dir: PathBuf,
 
+        /// A regular expression to filter feedback files
+        #[arg(long, short)]
+        filter_expr: Option<Regex>,
+
         /// A suffix to append to uploaded feedback files
-        #[arg(long, short, default_value = "")]
-        suffix: String,
+        #[arg(long, short)]
+        suffix: Option<String>,
 
         /// Upload without confirmation
-        #[arg(long, default_value = "false")]
+        #[arg(long)]
         no_confim: bool,
     },
 }
