@@ -134,20 +134,20 @@ pub fn upload_feedback(
 
 fn upload_filtered_file_with_suffix(
     path: PathBuf,
-    filename: &str,
+    target_filename: &str,
     filter_expr: Option<&Regex>,
     suffix: Option<impl AsRef<str>>,
     submission: &GradeSubmission,
     ilias_client: &IliasClient,
 ) -> Result<()> {
-    if !filter_expr.map_or(true, |filter_expr| filter_expr.is_match(filename)) {
-        debug!("Skipped uploading {}", filename);
+    if !filter_expr.map_or(true, |filter_expr| filter_expr.is_match(target_filename)) {
+        debug!("Skipped uploading {}", target_filename);
         return Ok(());
     }
 
     let target_filename = match suffix {
-        Some(ref suffix) => append_suffix(filename, suffix.as_ref())?,
-        None => filename.to_owned(),
+        Some(ref suffix) => append_suffix(target_filename, suffix.as_ref())?,
+        None => target_filename.to_owned(),
     };
 
     info!("Uploading {} to {}", target_filename, submission.identifier);
