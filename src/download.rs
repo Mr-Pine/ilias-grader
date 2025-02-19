@@ -43,6 +43,9 @@ pub fn download_submissions(
 
             let file_path = to.join(zip_path);
 
+            if file_path.is_dir() {
+                continue;
+            }
             info!(
                 "Extracting '{}' to '{}'",
                 original_zip_path
