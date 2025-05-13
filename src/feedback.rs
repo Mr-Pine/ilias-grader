@@ -43,17 +43,23 @@ pub fn upload_feedback(
             .interact()
             .expect("Interaction with confirmation prompt failed");
     if !confirmation {
-        println!("Aborted");
+        info!("Aborted");
         return Ok(());
     }
 
-    let feedback_dir = read_dir(feedback_dir_path).whatever_context("Unable to read feedback directory")?;
-    let feedback_entries = feedback_dir.collect::<Result<Vec<_>, _>>().whatever_context("Could not get directory entries")?;
+    let feedback_dir =
+        read_dir(feedback_dir_path).whatever_context("Unable to read feedback directory")?;
+    let feedback_entries = feedback_dir
+        .collect::<Result<Vec<_>, _>>()
+        .whatever_context("Could not get directory entries")?;
 
+    debug!("Available submissions: {:?}", grade_page.submissions);
     for submission in &grade_page.submissions {
         for feedback_entry in &feedback_entries {
             let path = feedback_entry.path();
-            let relative_path = path.strip_prefix(feedback_dir_path).whatever_context("Could not strip prefix from file")?;
+            let relative_path = path
+                .strip_prefix(feedback_dir_path)
+                .whatever_context("Could not strip prefix from file")?;
 
             let relative_path_string = relative_path.as_os_str();
 
@@ -64,37 +70,46 @@ pub fn upload_feedback(
                     str.starts_with(&submission.identifier.replace(' ', "_"))
                 })
             {
-                if feedback_entry.file_type().whatever_context(format!("Could not determine filetype for entry {:?}", feedback_entry))?.is_dir() {
-                    let user_dirs = read_dir(&path).whatever_context(format!("Could not read feedback user directory {:?}", path))?;
+                debug!("Feedback entry {feedback_entry:?}");
+                if feedback_entry
+                    .file_type()
+                    .whatever_context(format!(
+                        "Could not determine filetype for entry {:?}",
+                        feedback_entry
+                    ))?
+                    .is_dir()
+                {
+                    let user_dir = feedback_entry;
 
-                    for user_dir in user_dirs {
-                        let user_dir = user_dir.whatever_context("Bad user directory")?;
-                        if !user_dir.file_type().whatever_context(format!("Could not determine filetype for entry {:?}", feedback_entry))?.is_dir() {
-                            whatever!("Unsupported feedback file structure");
+                    let user_files =
+                        read_dir(user_dir.path()).whatever_context("Could not get user files")?;
+                    for user_file in user_files {
+                        let user_file = user_file.whatever_context("Bad user file")?;
+
+                        if !user_file
+                            .file_type()
+                            .whatever_context(format!(
+                                "Could not determine filetype for user entry {:?}",
+                                user_file
+                            ))?
+                            .is_file()
+                        {
+                            whatever!("Unsupported feedback file structure: Expected file");
                         }
 
-                        let user_files = read_dir(user_dir.path()).whatever_context("Could not get user files")?;
-                        for user_file in user_files {
-                            let user_file = user_file.whatever_context("Bad user file")?;
+                        let target_filename = user_file.file_name();
+                        let target_filename = target_filename
+                            .to_str()
+                            .whatever_context("Could not convert filename to &str")?;
 
-                            if !user_file.file_type().whatever_context(format!("Could not determine filetype for user entry {:?}", user_file))?.is_file() {
-                                whatever!("Unsupported feedback file structure");
-                            }
-
-                            let target_filename = user_file.file_name();
-                            let target_filename = target_filename
-                                .to_str()
-                                .whatever_context("Could not convert filename to &str")?;
-
-                            upload_filtered_file_with_suffix(
-                                user_file.path(),
-                                target_filename,
-                                filter_expr,
-                                suffix.as_ref(),
-                                submission,
-                                ilias_client,
-                            )?;
-                        }
+                        upload_filtered_file_with_suffix(
+                            user_file.path(),
+                            target_filename,
+                            filter_expr,
+                            suffix.as_ref(),
+                            submission,
+                            ilias_client,
+                        )?;
                     }
                 } else {
                     let target_filename = feedback_entry.file_name();
@@ -156,13 +171,19 @@ fn upload_filtered_file_with_suffix(
         path,
     };
 
-    submission.upload(local_file, ilias_client).whatever_context(format!("Could not upload {} to {}", target_filename, submission.identifier))?;
+    submission
+        .upload(local_file, ilias_client)
+        .whatever_context(format!(
+            "Could not upload {} to {}",
+            target_filename, submission.identifier
+        ))?;
 
     Ok(())
 }
 
 fn append_suffix(name: &str, suffix: &str) -> Result<String, Whatever> {
-    let parsed_name = PathBuf::from_str(name).whatever_context("Could not parse name to PathBuf")?;
+    let parsed_name =
+        PathBuf::from_str(name).whatever_context("Could not parse name to PathBuf")?;
     let mut appended_name = PathBuf::new();
     appended_name.set_file_name(format!(
         "{}{}",
