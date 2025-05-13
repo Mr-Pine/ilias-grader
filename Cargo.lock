@@ -1216,7 +1216,7 @@ dependencies = [
 [[package]]
 name = "ilias"
 version = "0.2.0"
-source = "git+https://github.com/Mr-Pine/ilias-rs.git#43a48b3f4cc12081efb51071099479bdbafe64a1"
+source = "git+https://github.com/Mr-Pine/ilias-rs.git#179e80ac7056a6d5dc98bb0c2f1296a5b4aa27cf"
 dependencies = [
  "base64",
  "chrono",
