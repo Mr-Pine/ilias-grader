@@ -3,7 +3,7 @@ use cli::Cli;
 use dialoguer::{theme::ColorfulTheme, Password};
 use download::download_submissions;
 use env_logger::Env;
-use feedback::upload_feedback;
+use feedback::{upload_feedback, upload_points};
 use ilias::{
     client::IliasClient, exercise::Exercise, reference::Reference, IliasElement, ILIAS_URL,
 };
@@ -39,7 +39,9 @@ fn main() -> Result<(), Whatever> {
         })
     });
 
-    let ilias_client = IliasClient::new(Url::parse(ILIAS_URL).whatever_context("Unable to parse ilias url")?).whatever_context("Could not create ilias client")?;
+    let ilias_client =
+        IliasClient::new(Url::parse(ILIAS_URL).whatever_context("Unable to parse ilias url")?)
+            .whatever_context("Could not create ilias client")?;
     ilias_client.authenticate(&username, &password)?;
 
     let mut exercise = Exercise::parse(
@@ -85,6 +87,7 @@ fn main() -> Result<(), Whatever> {
             suffix.as_ref(),
             &ilias_client,
         ),
+        cli::Commands::UploadPoints {} => upload_points(grade_page, &ilias_client),
     }?;
 
     Ok(())
