@@ -30,9 +30,9 @@ pub fn upload_points(grade_page: &GradePage, ilias_client: &IliasClient) -> Resu
         .unwrap()
     {
         let selected_points: String = dialoguer::Input::with_theme(&ColorfulTheme::default())
-            .with_prompt("Punkte:")
+            .with_prompt("Points:")
             .interact_text()
-            .expect("Interaction failed");
+            .whatever_context("Inputting points failed.")?;
 
         let mut submission = grade_page
             .submissions
