@@ -22,20 +22,27 @@ pub fn download_submissions(
     if extract {
         let tempfile = NamedTempFile::new().whatever_context("Could not create temp file")?;
         let temppath = tempfile.into_temp_path();
-        grade_page.download_all_submissions_zip(ilias_client, &temppath).whatever_context("Failed to download submissions zip")?;
+        grade_page
+            .download_all_submissions_zip(ilias_client, &temppath)
+            .whatever_context("Failed to download submissions zip")?;
 
         let zipfile = File::open(temppath).whatever_context("Unable to open tempfile")?;
-        let mut zip_archive = ZipArchive::new(zipfile).whatever_context("Unable to read submissions zip")?;
+        let mut zip_archive =
+            ZipArchive::new(zipfile).whatever_context("Unable to read submissions zip")?;
 
         for i in 0..zip_archive.len() {
-            let mut file = zip_archive.by_index(i).whatever_context(format!("Could not get entry {i} in submissions zip"))?;
+            let mut file = zip_archive
+                .by_index(i)
+                .whatever_context(format!("Could not get entry {i} in submissions zip"))?;
             if !file.is_file() {
                 continue;
             }
 
             let mut zip_path = file.enclosed_name().expect("Malformed path in zip file");
             let original_zip_path = zip_path.clone();
-            zip_path = drop_components(&mut zip_path, 2).whatever_context("Could not drop first two path components")?.to_path_buf();
+            zip_path = drop_components(&mut zip_path, 2)
+                .whatever_context("Could not drop first two path components")?
+                .to_path_buf();
 
             if flatten {
                 zip_path = flatten_path(&zip_path).whatever_context("Could not flatten path")?;
@@ -59,8 +66,10 @@ pub fn download_submissions(
                 .expect("Could not get containing directory");
             fs::create_dir_all(dir).whatever_context(format!("Could not create {dir:?}"))?;
 
-            let mut target_file = File::create(&file_path).whatever_context(format!("Could not create {file_path:?}"))?;
-            io::copy(&mut file, &mut target_file).whatever_context(format!("Could not write to {target_file:?}"))?;
+            let mut target_file = File::create(&file_path)
+                .whatever_context(format!("Could not create {file_path:?}"))?;
+            io::copy(&mut file, &mut target_file)
+                .whatever_context(format!("Could not write to {target_file:?}"))?;
         }
     } else {
         grade_page.download_all_submissions_zip(ilias_client, to)?;
@@ -75,7 +84,8 @@ pub fn download_submissions(
 
 fn drop_components(path: &mut Path, count: usize) -> Result<&Path, Whatever> {
     let prefix = path.components().take(count).collect::<PathBuf>();
-    Ok(path.strip_prefix(prefix.clone()).whatever_context(format!("Could not strip prefix {prefix:?} from {path:?}"))?)
+    path.strip_prefix(prefix.clone())
+        .whatever_context(format!("Could not strip prefix {prefix:?} from {path:?}"))
 }
 
 fn flatten_path(path: &Path) -> Result<PathBuf, Whatever> {
@@ -91,5 +101,5 @@ fn flatten_path(path: &Path) -> Result<PathBuf, Whatever> {
         .collect::<Vec<_>>();
     let path = components.join("-");
 
-    Ok(PathBuf::from_str(&path).whatever_context(format!("Could not convert {path} to PathBuf"))?)
+    PathBuf::from_str(&path).whatever_context(format!("Could not convert {path} to PathBuf"))
 }

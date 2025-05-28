@@ -91,17 +91,16 @@ pub fn upload_feedback(
 
             if relative_path_string
                 .to_str()
-                .map_or(false, |str| str.starts_with(&submission.identifier))
-                || relative_path_string.to_str().map_or(false, |str| {
-                    str.starts_with(&submission.identifier.replace(' ', "_"))
-                })
+                .is_some_and(|str| str.starts_with(&submission.identifier))
+                || relative_path_string
+                    .to_str()
+                    .is_some_and(|str| str.starts_with(&submission.identifier.replace(' ', "_")))
             {
                 debug!("Feedback entry {feedback_entry:?}");
                 if feedback_entry
                     .file_type()
                     .whatever_context(format!(
-                        "Could not determine filetype for entry {:?}",
-                        feedback_entry
+                        "Could not determine filetype for entry {feedback_entry:?}"
                     ))?
                     .is_dir()
                 {
@@ -115,8 +114,7 @@ pub fn upload_feedback(
                         if !user_file
                             .file_type()
                             .whatever_context(format!(
-                                "Could not determine filetype for user entry {:?}",
-                                user_file
+                                "Could not determine filetype for user entry {user_file:?}"
                             ))?
                             .is_file()
                         {
@@ -181,8 +179,8 @@ fn upload_filtered_file_with_suffix(
     submission: &GradeSubmission,
     ilias_client: &IliasClient,
 ) -> Result<(), Whatever> {
-    if !filter_expr.map_or(true, |filter_expr| filter_expr.is_match(target_filename)) {
-        debug!("Skipped uploading {}", target_filename);
+    if !filter_expr.is_none_or(|filter_expr| filter_expr.is_match(target_filename)) {
+        debug!("Skipped uploading {target_filename}");
         return Ok(());
     }
 
