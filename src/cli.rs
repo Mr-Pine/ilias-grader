@@ -56,4 +56,5 @@ pub enum Commands {
         #[arg(long)]
         no_confim: bool,
     },
+    UploadPoints {},
 }

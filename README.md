@@ -13,8 +13,9 @@ Clone this repository and either install it with `cargo install --path .` or sim
 ilias-grader [OPTIONS] --id <ID> --assignment <ASSIGNMENT> --username <USERNAME> <COMMAND>
 
 Commands:
-  download  Download submissions
-  feedback  Upload feedback
+  download       Download submissions
+  feedback       Upload feedback
+  upload-points  Upload points 
   help      Print this message or the help of the given subcommand(s)
 
 Options:
@@ -50,6 +51,12 @@ Options:
       --no-confim        Upload without confirmation
   -h, --help             Print help
 ```
+
+## Uploading points 
+```
+ilias-grader --id <ID> --assignment <ASSIGNMENT> --username <USERNAME> upload-points 
+```
+You'll see a search screen where you can select a student and assign them points. You can repeat this process for as many students as needed. When you're done, press <ESC> to upload the points. If you need to cancel at any time, press <Ctrl-C>.
 
 ## Logging
 By default, the log level is `info`, you can configure logging with the `RUST_LOG` environment variable: https://docs.rs/env_logger/latest/env_logger/#enabling-logging

@@ -6,7 +6,7 @@ use std::{
     sync::LazyLock,
 };
 
-use dialoguer::{theme::ColorfulTheme, Confirm};
+use dialoguer::{theme::ColorfulTheme, Confirm, FuzzySelect};
 use ilias::{
     client::IliasClient,
     exercise::grades::{submission::GradeSubmission, GradePage},
@@ -19,6 +19,32 @@ use snafu::{whatever, OptionExt, ResultExt, Whatever};
 static FLATTENED_FILENAME_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new("@student\\.kit\\.edu_\\d+-(?<filename>.*)").expect("Invalid regex pattern")
 });
+
+pub fn upload_points(grade_page: &GradePage, ilias_client: &IliasClient) -> Result<(), Whatever> {
+    let mut changed_submissions = vec![];
+    while let Some(selected_student) = FuzzySelect::with_theme(&ColorfulTheme::default())
+        .with_prompt("Pick a student")
+        .default(0)
+        .items(grade_page.submissions.as_slice())
+        .interact_opt()
+        .unwrap()
+    {
+        let selected_points: String = dialoguer::Input::with_theme(&ColorfulTheme::default())
+            .with_prompt("Points:")
+            .interact_text()
+            .whatever_context("Inputting points failed.")?;
+
+        let mut submission = grade_page
+            .submissions
+            .get(selected_student)
+            .whatever_context("Could not get selected_student")?
+            .clone();
+        submission.points = selected_points;
+        changed_submissions.push(submission);
+    }
+    debug!("{changed_submissions:?}",);
+    grade_page.update_points(ilias_client, &changed_submissions)
+}
 
 pub fn upload_feedback(
     grade_page: &GradePage,
