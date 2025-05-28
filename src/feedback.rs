@@ -42,7 +42,7 @@ pub fn upload_points(grade_page: &GradePage, ilias_client: &IliasClient) -> Resu
         submission.points = selected_points;
         changed_submissions.push(submission);
     }
-    debugln!("{changed_submissions:?}",);
+    debug!("{changed_submissions:?}",);
     grade_page.update_points(ilias_client, &changed_submissions)
 }
 
